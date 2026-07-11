@@ -44,27 +44,28 @@ const debug = Debug("dsn-converter:parse-dsn-to-dsn-json")
 
 // **Process AST into TypeScript Interfaces**
 export function parseDsnToDsnJson(dsnString: string): DsnJson {
-    // GUARD: Empty file check - Fixes crash on empty DSN for #54
+  // GUARD: Empty file check - Fixes crash on empty DSN for #54
   if (!dsnString?.trim()) {
     return {
-      filename: filename || "empty.dsn",
+      filename: "empty.dsn",
       parser: { string: "", hosts: [], constants: {} },
       resolution: { unit: "um", value: 25400 },
       structure: { layers: [], boundary: [], via: "", rules: [] },
       placement: { components: [] },
       library: { images: [], padstacks: [] },
       network: { nets: [], classes: [] },
-      wiring: { wires: [], vias: [] }
+      wiring: { wires: [], vias: [] },
     }
   }
 
   // SMOOTHIE BOARD FIX: Handle smoothieboard_v1 syntax for issue #54
-  const isSmoothieBoard = dsnString.includes("smoothieboard") || 
-                          dsnString.includes("smoothie_v1") ||
-                          dsnString.includes("smoothieboard_v1")
+  const isSmoothieBoard =
+    dsnString.includes("smoothieboard") ||
+    dsnString.includes("smoothie_v1") ||
+    dsnString.includes("smoothieboard_v1")
 
   if (isSmoothieBoard) {
-    return parseSmoothieBoardDsn(dsnString, filename)
+    return parseSmoothieBoardDsn(dsnString, "smoothieboard.dsn")
   }
   const tokens = tokenizeDsn(dsnString)
   const ast = parseSexprToAst(tokens)
