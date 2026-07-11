@@ -67,7 +67,7 @@ export function parseDsnToDsnJson(dsnString: string): DsnJson {
   }
 
   const tokens = tokenizeDsn(dsnString)
-  const ast = parseSExprToAst(tokens)
+  const ast = parseSexprToAst(tokens)
 
   // Check if this is a session file or PCB file
   if (ast.type === "List" && ast.children && ast.children[0].type === "Atom") {
