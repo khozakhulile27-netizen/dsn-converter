@@ -64,10 +64,12 @@ export function parseDsnToDsnJson(dsnString: string): DsnJson {
     dsnString.includes("smoothie_v1") ||
     dsnString.includes("smoothieboard_v1")
 
-  return parseSmoothieBoardDsn(dsnString, "smoothieboard.dsn")
+  if (isSmoothieBoard) {
+    return parseSmoothieBoardDsn(dsnString, "smoothieboard.dsn")
   }
+
   const tokens = tokenizeDsn(dsnString)
-  const ast = parseSexprToAst(tokens)
+  const ast = parseSExprToAst(tokens)
 
   // Check if this is a session file or PCB file
   if (ast.type === "List" && ast.children && ast.children[0].type === "Atom") {
