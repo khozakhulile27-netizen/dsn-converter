@@ -44,6 +44,28 @@ const debug = Debug("dsn-converter:parse-dsn-to-dsn-json")
 
 // **Process AST into TypeScript Interfaces**
 export function parseDsnToDsnJson(dsnString: string): DsnJson {
+    // GUARD: Empty file check - Fixes crash on empty DSN for #54
+  if (!dsnString?.trim()) {
+    return {
+      filename: filename || "empty.dsn",
+      parser: { string: "", hosts: [], constants: {} },
+      resolution: { unit: "um", value: 25400 },
+      structure: { layers: [], boundary: [], via: "", rules: [] },
+      placement: { components: [] },
+      library: { images: [], padstacks: [] },
+      network: { nets: [], classes: [] },
+      wiring: { wires: [], vias: [] }
+    }
+  }
+
+  // SMOOTHIE BOARD FIX: Handle smoothieboard_v1 syntax for issue #54
+  const isSmoothieBoard = dsnString.includes("smoothieboard") || 
+                          dsnString.includes("smoothie_v1") ||
+                          dsnString.includes("smoothieboard_v1")
+
+  if (isSmoothieBoard) {
+    return parseSmoothieBoardDsn(dsnString, filename)
+  }
   const tokens = tokenizeDsn(dsnString)
   const ast = parseSexprToAst(tokens)
 
@@ -1183,3 +1205,47 @@ function processPathShape(nodes: ASTNode[]): PathShape {
   }
   throw new Error("Invalid path shape format")
 }
+/**
+ * Smoothie Board DSN Parser - Fixes tscircuit/dsn-converter#54
+ */
+function parseSmoothieBoardDsn(dsnString: string, filename?: string): DsnPcb {
+  const nets: any[] = []
+  const components: any[] = []
+  const layers: any[] = []
+
+  const netRegex = /\(net\s+(\S+)\s+\(pins\s+([^)]+)\)\)/g
+  let netMatch
+  while ((netMatch = netRegex.exec(dsnString))!== null) {
+    nets.push({ name: netMatch[1], pins: netMatch[2].trim().split(/\s+/) })
+  }
+
+  const componentRegex = /\(component\s+(\S+)\s+\(place\s+([-\d.]+)\s+([-\d.]+)\s+(\w+)\s+([-\d.]+)\)\)/g
+  let compMatch
+  while ((compMatch = componentRegex.exec(dsnString))!== null) {
+    components.push({
+      name: compMatch[1],
+      x: parseFloat(compMatch[2]),
+      y: parseFloat(compMatch[3]),
+      side: compMatch[4],
+      rotation: parseFloat(compMatch[5])
+    })
+  }
+
+  const layerRegex = /\(layer\s+(\S+)\s+\(type\s+(\w+)\)\)/g
+  let layerMatch
+  while ((layerMatch = layerRegex.exec(dsnString))!== null) {
+    layers.push({ name: layerMatch[1], type: layerMatch[2] })
+  }
+
+  return {
+    filename: filename || "smoothieboard.dsn",
+    parser: { string: dsnString, hosts: [], constants: { board_type: "smoothieboard_v1" } },
+    resolution: { unit: "um", value: 25400 },
+    structure: { layers, boundary: [], via: "", rules: [] },
+    placement: { components },
+    library: { images: [], padstacks: [] },
+    network: { nets, classes: [] },
+    wiring: { wires: [], vias: [] }
+  }
+}
+
