@@ -1,7 +1,6 @@
-import Debug from "debug";
 import {
   type ASTNode,
-  parseSExprToAst,
+  parseSExprToAst, // Make sure this is present
   tokenizeDsn,
 } from "../common/parse-sexpr";
 import {
