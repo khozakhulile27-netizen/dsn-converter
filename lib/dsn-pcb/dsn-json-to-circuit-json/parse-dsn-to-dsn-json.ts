@@ -1,6 +1,4 @@
 import Debug from "debug"
-import { getPinNum } from "lib/utils/get-pin-number"
-import { getViaCoords } from "lib/utils/get-via-coordinates"
 import {
   type ASTNode,
   parseSexprToAst,
