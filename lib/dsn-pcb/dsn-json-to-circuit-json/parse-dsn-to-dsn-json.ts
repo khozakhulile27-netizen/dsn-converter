@@ -1208,7 +1208,7 @@ function processPathShape(nodes: ASTNode[]): PathShape {
 /**
  * Smoothie Board DSN Parser - Fixes tscircuit/dsn-converter#54
  */
-function parseSmoothieBoardDsn(dsnString: string, filename?: string): DsnPcb {
+function parseSmoothieBoardDsn(dsnString: string, filename: string): DsnJson {
   const nets: any[] = []
   const components: any[] = []
   const layers: any[] = []
@@ -1219,7 +1219,8 @@ function parseSmoothieBoardDsn(dsnString: string, filename?: string): DsnPcb {
     nets.push({ name: netMatch[1], pins: netMatch[2].trim().split(/\s+/) })
   }
 
-  const componentRegex = /\(component\s+(\S+)\s+\(place\s+([-\d.]+)\s+([-\d.]+)\s+(\w+)\s+([-\d.]+)\)\)/g
+  const componentRegex =
+    /\(component\s+(\S+)\s+\(place\s+([-\d.]+)\s+([-\d.]+)\s+(\w+)\s+([-\d.]+)\)\)/g
   let compMatch
   while ((compMatch = componentRegex.exec(dsnString))!== null) {
     components.push({
@@ -1227,7 +1228,7 @@ function parseSmoothieBoardDsn(dsnString: string, filename?: string): DsnPcb {
       x: parseFloat(compMatch[2]),
       y: parseFloat(compMatch[3]),
       side: compMatch[4],
-      rotation: parseFloat(compMatch[5])
+      rotation: parseFloat(compMatch[5]),
     })
   }
 
@@ -1238,14 +1239,17 @@ function parseSmoothieBoardDsn(dsnString: string, filename?: string): DsnPcb {
   }
 
   return {
-    filename: filename || "smoothieboard.dsn",
-    parser: { string: dsnString, hosts: [], constants: { board_type: "smoothieboard_v1" } },
+    filename: filename,
+    parser: {
+      string: dsnString,
+      hosts: [],
+      constants: { board_type: "smoothieboard_v1" },
+    },
     resolution: { unit: "um", value: 25400 },
     structure: { layers, boundary: [], via: "", rules: [] },
     placement: { components },
     library: { images: [], padstacks: [] },
     network: { nets, classes: [] },
-    wiring: { wires: [], vias: [] }
+    wiring: { wires: [], vias: [] },
   }
 }
-
