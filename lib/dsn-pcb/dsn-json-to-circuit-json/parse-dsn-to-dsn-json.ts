@@ -654,55 +654,6 @@ function processShape(nodes: ASTNode[]): Shape {
         case "path": return processPathShape(children);
       }
     }
-  }
-
-  console.error("Shape processing error for nodes:", nodes);
-  throw new Error(`Unknown shape type for nodes: ${JSON.stringify(nodes)}`);
-}
-  if (
-  const isValid = nodes[0]?.value === "rect" &&
-                  nodes[1]?.type === "Atom" && typeof nodes[1].value === "string" &&
-                  nodes[2]?.type === "Atom" && typeof nodes[2].value === "number" &&
-                  nodes[3]?.type === "Atom" && typeof nodes[3].value === "number" &&
-                  nodes[4]?.type === "Atom" && typeof nodes[4].value === "number" &&
-                  nodes[5]?.type === "Atom" && typeof nodes[5].value === "number";
-
-  if (isValid) {
-    return {
-      shapeType: "rect",
-      layer: nodes[1].value as string,
-      coordinates: [
-        nodes[2].value as number,
-        nodes[3].value as number,
-        nodes[4].value as number,
-        nodes[5].value as number,
-      ],
-    };
-  }
-
-  throw new Error("Invalid rect shape format");
-}
-
-    nodes[1].type === "Atom" &&
-    typeof nodes[1].value === "string" &&
-    nodes[2].type === "Atom" &&
-    typeof nodes[2].value === "number"
-  ) {
-    polygon.layer = nodes[1].value
-    polygon.width = nodes[2].value
-    polygon.coordinates = []
-    for (let i = 3; i < nodes.length; i++) {
-      const coordNode = nodes[i]
-      if (coordNode.type === "Atom" && typeof coordNode.value === "number") {
-        polygon.coordinates.push(coordNode.value)
-      } else {
-        throw new Error("Invalid coordinate in polygon shape")
-      }
-    }
-    return polygon as PolygonShape
-  } else {
-    throw new Error("Invalid polygon shape format")
-  }
 }
 
 function processCircleShape(nodes: ASTNode[]): CircleShape {
