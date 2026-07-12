@@ -11,7 +11,7 @@ const debug = Debug("dsn-converter:parse-dsn-to-dsn-json")
 /**
  * Parse DSN string to DSN JSON
  */
-export function parseDsnToDsnJson(dsnString: string): DsnJson {
+export function parseDsnToDsnJson(dsnString: string, filename?: string): DsnJson {
   // GUARD: Empty file check - Fixes crash on empty DSN for #54
   if (!dsnString?.trim()) {
     return {
