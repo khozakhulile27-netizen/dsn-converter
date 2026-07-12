@@ -911,10 +911,9 @@ function processWire(nodes: ASTNode[]): Wire {
 function processSessionNode(ast: ASTNode): DsnSession {
   const session: DsnSession = {
     is_dsn_session: true,
-    filename:
-            filename: ast.children?.[1]?.type === "Atom"
-        ? (ast.children[1].value as string)
-        : "session",
+    filename: ast.children?.[1]?.type === "Atom"
+? (ast.children[1].value as string)
+ : "session",
     placement: {
       resolution: { unit: "um", value: 10 },
       components: [],
@@ -976,7 +975,6 @@ function processSessionNode(ast: ASTNode): DsnSession {
           child.children?.[0].type === "Atom" &&
           child.children[0].value === "net",
       )
-
           session.routes.network_out.nets = netNodes.map((netNode) => {
       const netName = netNode.children?.[1]?.value as string;
       const wireNodes = netNode.children?.filter((child) => 
