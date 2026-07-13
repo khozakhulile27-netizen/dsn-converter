@@ -68,7 +68,6 @@ export function parseDsnToDsnJson(dsnString: string, filename?: string): DsnJson
       return pcb;
     }
   }
-
   throw new Error("Invalid DSN file format");
 }
 
@@ -105,7 +104,7 @@ function processPcbNode(node: ASTNode): any {
       }
     }
   }
-  return null;
+  return null    
 }
 
 export function processPCB(nodes: ASTNode[]): DsnPcb {
@@ -161,8 +160,9 @@ export function processPCB(nodes: ASTNode[]): DsnPcb {
             pcb.wiring = processWiring(element.children.slice(1)) as any;
             break;
         }
-      
-  
+    }
+  }
+
   return pcb as DsnPcb
 }
 
@@ -546,8 +546,6 @@ function processOutline(nodes: ASTNode[]): Outline {
   
 function processPin(nodes: ASTNode[]): Pin | null {
   const pin: Partial<Pin> = {};
-  try {
-  // Get padstack name safely
   if (nodes[1]?.type !== "Atom") {
     console.debug("Unsupported pin padstack_name format:", nodes);
     return null;
@@ -999,4 +997,7 @@ function processPathShape(nodes: ASTNode[]): PathShape {
     }
   }
   throw new Error("Invalid path shape format")
-        }
+      }
+   }
+ }
+      
