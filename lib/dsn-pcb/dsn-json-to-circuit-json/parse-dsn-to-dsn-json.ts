@@ -161,9 +161,8 @@ export function processPCB(nodes: ASTNode[]): DsnPcb {
             pcb.wiring = processWiring(element.children.slice(1)) as any;
             break;
         }
-      }
-    }
-  }
+      })
+  
 
   return pcb as DsnPcb
 }
@@ -250,31 +249,24 @@ export function processStructure(nodes: ASTNode[]): Structure {
       }
     }
   });
-  return structure;
-}
-
-                    case "rule":
-            structure.rules = processRule(node.children.slice(1));
-            break;
-        }
-      }
-    }
-  });
-
   return structure as Structure;
-}
+};
 
+  
 function processLayer(nodes: ASTNode[]): Layer {
   const layer: Partial<Layer> = {}
   if (nodes[1].type === "Atom" && typeof nodes[1].value === "string") {
-    layer.name 
+    layer.name = nodes[1].value as string 
+}
 
+  nodes.slice(2).forEach(node => { 
+    if (node.type === "List" && node.children) {
+    switch (node.children[0]?.value) {
           case "property":
-            layer.property = processProperty(rest)
+            layer.property = processProperty(node.children.slice(1))
             break
         }
       }
-    }
   })
 
   return layer as Layer
@@ -297,9 +289,9 @@ function processProperty(nodes: ASTNode[]): { index: number } {
     }
   });
   return property;
+ }
 }
 
-}
 
 function processBoundary(nodes: ASTNode[]): Boundary {
   const boundary: Partial<Boundary> = {}
@@ -393,6 +385,7 @@ function processClearance(nodes: ASTNode[]): Clearance {
   return clearance as Clearance;
 }
 
+  
 export function processPlacement(nodes: ASTNode[]): Placement {
   const placement: Placement = { components: [] };
 
@@ -401,12 +394,10 @@ export function processPlacement(nodes: ASTNode[]): Placement {
       placement.components.push(processComponent(node.children));
     }
   });
-
   return placement;
 }
 
   
-}
 
 function processComponent(nodes: ASTNode[]): ComponentPlacement {
   const component: Partial<ComponentPlacement> = {
@@ -553,6 +544,7 @@ function processOutline(nodes: ASTNode[]): Outline {
   return outline as Outline
 }
 
+  
 function processPin(nodes: ASTNode[]): Pin | null {
   const pin: Partial<Pin> = {};
 
@@ -598,7 +590,7 @@ function processPin(nodes: ASTNode[]): Pin | null {
   if (typeof xValue !== "number" || typeof yValue !== "number") {
     throw new Error(`Invalid coordinates: x=${xValue}, y=${yValue}`);
   }
-
+ 
     pin.x = xValue;
     pin.y = yValue;
     return pin as Pin;
@@ -607,7 +599,7 @@ function processPin(nodes: ASTNode[]): Pin | null {
     console.error("Problematic nodes:", JSON.stringify(nodes, null, 2));
     throw error;
   }
-}
+
 
   function processPadstack(nodes: ASTNode[]): Padstack {
   const padstack: Partial<Padstack> = {};
@@ -638,6 +630,7 @@ function processPin(nodes: ASTNode[]): Pin | null {
   return padstack as Padstack;
 }
 
+
 function processShape(nodes: ASTNode[]): Shape {
   const shapeContentNode = nodes.find(node => node.type === "List");
   
@@ -656,6 +649,7 @@ function processShape(nodes: ASTNode[]): Shape {
     }
 }
 
+  
 function processCircleShape(nodes: ASTNode[]): CircleShape {
   const circle: Partial<CircleShape> = { shapeType: "circle" };
 
@@ -674,11 +668,10 @@ function processCircleShape(nodes: ASTNode[]): CircleShape {
       circle.layer = String(shapeNodes[1].value);
       circle.diameter = Number(coords[1].value);
       return circle as CircleShape;
-    }
     throw new Error("Invalid circle shape format");
   }
-}
-
+  
+   
 export function processNetwork(nodes: ASTNode[]): Network {
   const network: Partial<Network> = {
     nets: [],
@@ -702,6 +695,7 @@ export function processNetwork(nodes: ASTNode[]): Network {
   return network as Network
 }
 
+    
 function processNet(nodes: ASTNode[]): Net {
   const net: Partial<Net> = {}
   if (nodes[1].type === "Atom" && typeof nodes[1].value === "string") {
@@ -787,68 +781,61 @@ function processCircuit(nodes: ASTNode[]): Circuit {
         node.children[1]?.type === "Atom" &&
         typeof node.children[1]?.value === "string"
       ) {
-        circuit.use_via = node.children[1].value;
+        circuit.use_via = node.children[1].value as string;
       }
     }
   });
-
   return circuit as Circuit
 }
-
+  
+  
 export function processWiring(nodes: ASTNode[]): Wiring {
   const wiring: Partial<Wiring> = {
     wires: [],
-  }
+  };
 
-    nodes.forEach((node) => {
+  nodes.forEach((node) => {
     if (node.type === "List" && node.children) {
-      if (
-        node.children[0]?.type === "Atom" &&
-        node.children[0]?.value === "wire"
-      ) {
+      if (node.children[0]?.type === "Atom" && node.children[0]?.value === "wire") {
         wiring.wires?.push(processWire(node.children));
-      } else if (
-        node.children[0]?.type === "Atom" &&
-        node.children[0]?.value === "via"
-      ) {
+      } else if (node.children[0]?.type === "Atom" && node.children[0]?.value === "via") {
         const via = processVia(node.children);
         if (via) wiring.wires?.push(via);
       }
     }
   });
 
-
-  return wiring as Wiring
+  return wiring as Wiring;
 }
 
-function processVia(nodes: ASTNode[]): Wire | null {
-  const coords = getViaCoords(nodes)
+export function processVia(nodes: ASTNode[]): Wire | null {
+  const coords = getViaCoords(nodes);
   if (!coords) {
-    return null
+    return null;
   }
 
   const wire: Partial<Wire> = {
     path: {
-      layer: "all", // vias connect all layers
-      width: 0, // width is defined by the padstack
+      layer: "all",
+      width: 0,
       coordinates: [coords.x, coords.y],
     },
     type: "via",
-  }
+  };
 
   // Find net name if present
   const netNode = nodes.find(
     (node) =>
       node.type === "List" &&
       node.children?.[0]?.type === "Atom" &&
-      node.children[0].value === "net",
-  )
+      node.children[0].value === "net"
+  );
 
   if (netNode?.children?.[1]?.type === "Atom") {
-    wire.net = String(netNode.children[1].value)
+    wire.net = String(netNode.children[1].value);
   }
 
-  return wire as Wire
+  return wire as Wire;
 }
 
 function processWire(nodes: ASTNode[]): Wire {
@@ -967,49 +954,36 @@ function processSessionNode(ast: ASTNode): DsnSession {
       const networkNode = routesNode.children.find((child) => 
     child.type === "List" && child.children?.[0]?.type === "Atom" && child.children[0].value === "network_out"
   );
-  if (networkNode?.children) {
-    const netNodes = networkNode.children.filter((child) => child.type === "List");
+      if (networkNode?.children) {
+      const netNodes = networkNode.children.filter((child) =>
+        child.type === "List" && child.children?.[0]?.type === "Atom" && child.children[0].value === "net"
+      );
+      session.routes.network_out.nets = netNodes.map((netNode) => {
+        const netName = netNode.children?.[1]?.value as string;
+        const wireNodes = netNode.children?.filter((child) =>
+          child.type === "List" && child.children?.[0]?.type === "Atom" && child.children[0].value === "wire"
+        );
+        const viaNodes = netNode.children?.filter((child) =>
+          child.type === "List" && child.children?.[0]?.type === "Atom" && child.children[0].value === "via"
+        );
 
-        (child) =>
-          child.type === "List" &&
-          child.children?.[0].type === "Atom" &&
-          child.children[0].value === "net",
-      )
-          session.routes.network_out.nets = netNodes.map((netNode) => {
-      const netName = netNode.children?.[1]?.value as string;
-      const wireNodes = netNode.children?.filter((child) => 
-        child.type === "List" && child.children?.[0]?.type === "Atom" && child.children[0].value === "wire"
-      ) || [];
-
-      const viaNodes = netNode.children?.filter((child) => 
-        child.type === "List" && child.children?.[0]?.type === "Atom" && child.children[0].value === "via"
-      ) || [];
-
-          (child) =>
-            child.type === "List" &&
-            child.children?.[0].type === "Atom" &&
-            child.children[0].value === "via",
-        )
-
-            const net = {
-      name: netName,
-      wires: wireNodes.map((wireNode) => ({
-        path: processPath(wireNode.children || []),
-        net: netName,
-        type: "route",
-      })),
-      vias: viaNodes.map((viaNode) => ({
-        x: viaNode.children?.[2]?.value as number,
-        y: viaNode.children?.[3]?.value as number,
-      })),
-    };
-        return net
-      })
-    }
-  }
+        const net = {
+          name: netName,
+          wires: wireNodes.map((wireNode) => ({
+            path: processPath(wireNode.children || []),
+            net: netName,
+            type: "route",
+          })),
+          vias: viaNodes.map((viaNode) => ({
+            x: viaNode.children?.[2]?.value as number,
+            y: viaNode.children?.[3]?.value as number,
+          })),
+        };
+        return net;
+      });
 
   return session
-}
+
 
 function processPathShape(nodes: ASTNode[]): PathShape {
   if (
