@@ -161,8 +161,7 @@ export function processPCB(nodes: ASTNode[]): DsnPcb {
             break;
         }
     }
-  }
-
+  
   return pcb as DsnPcb
 }
 
@@ -289,8 +288,6 @@ function processProperty(nodes: ASTNode[]): { index: number } {
   });
   return property;
  }
-}
-
 
 function processBoundary(nodes: ASTNode[]): Boundary {
   const boundary: Partial<Boundary> = {}
@@ -382,7 +379,7 @@ function processClearance(nodes: ASTNode[]): Clearance {
     }
   }
   return clearance as Clearance;
-}
+
 
   
 export function processPlacement(nodes: ASTNode[]): Placement {
@@ -1000,4 +997,4 @@ function processPathShape(nodes: ASTNode[]): PathShape {
       }
    }
  }
-      
+}  
