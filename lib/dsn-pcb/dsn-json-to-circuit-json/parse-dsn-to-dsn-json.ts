@@ -198,7 +198,6 @@ export function processParser(nodes: ASTNode[]): ParserType {
     }
   })
   return parser as ParserType
-}
 
   
 export function processResolution(nodes: ASTNode[]): Resolution {
@@ -249,7 +248,6 @@ export function processStructure(nodes: ASTNode[]): Structure {
     }
   });
   return structure as Structure;
-};
 
   
 function processLayer(nodes: ASTNode[]): Layer {
@@ -499,8 +497,7 @@ export function processLibrary(nodes: ASTNode[]): Library {
     }
  }); 
   return library as Library
-}
-  
+
 
 function processImage(nodes: ASTNode[]): Image {
   const image: Partial<Image> = {}
@@ -684,7 +681,6 @@ export function processNetwork(nodes: ASTNode[]): Network {
     }
   }); 
   return network as Network
-}
 
     
 function processNet(nodes: ASTNode[]): Net {
@@ -796,7 +792,6 @@ export function processWiring(nodes: ASTNode[]): Wiring {
     }
   });
   return wiring as Wiring;
-}
 
 
 export function processVia(nodes: ASTNode[]): Wire | null {
@@ -826,7 +821,6 @@ export function processVia(nodes: ASTNode[]): Wire | null {
     wire.net = String(netNode.children[1].value);
   }
   return wire as Wire;
-}
 
 
 function processWire(nodes: ASTNode[]): Wire {
