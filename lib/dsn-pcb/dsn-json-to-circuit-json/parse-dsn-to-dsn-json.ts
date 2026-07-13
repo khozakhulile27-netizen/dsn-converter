@@ -107,6 +107,7 @@ function processPcbNode(node: ASTNode): any {
   return null    
 }
 
+
 export function processPCB(nodes: ASTNode[]): DsnPcb {
   const pcb: Partial<DsnPcb> = {
     is_dsn_pcb: true,
@@ -161,10 +162,10 @@ export function processPCB(nodes: ASTNode[]): DsnPcb {
             break;
         }
     }
-  
   return pcb as DsnPcb
 }
 
+  
 export function processParser(nodes: ASTNode[]): ParserType {
   const parser: Partial<ParserType> = {}
   nodes.forEach((node) => {
@@ -199,6 +200,7 @@ export function processParser(nodes: ASTNode[]): ParserType {
   return parser as ParserType
 }
 
+  
 export function processResolution(nodes: ASTNode[]): Resolution {
   const [_, unitNode, valueNode] = nodes
   if (
@@ -214,7 +216,7 @@ export function processResolution(nodes: ASTNode[]): Resolution {
   } else {
     throw new Error("Invalid resolution format")
   }
-}
+
 
 export function processStructure(nodes: ASTNode[]): Structure {
   const structure: Structure = {
@@ -242,7 +244,6 @@ export function processStructure(nodes: ASTNode[]): Structure {
             if (node.children.length > 1 && node.children[1].type === "Atom") {
               structure.via = node.children[1].value as string;
             }
-            break;
         }
       }
     }
@@ -266,10 +267,10 @@ function processLayer(nodes: ASTNode[]): Layer {
         }
       }
   })
-
   return layer as Layer
 }
 
+  
 function processProperty(nodes: ASTNode[]): { index: number } {
   const property: any = {};
   nodes.forEach((node) => {
@@ -289,6 +290,7 @@ function processProperty(nodes: ASTNode[]): { index: number } {
   return property;
  }
 
+  
 function processBoundary(nodes: ASTNode[]): Boundary {
   const boundary: Partial<Boundary> = {}
   nodes.forEach((node) => {
@@ -303,6 +305,7 @@ function processBoundary(nodes: ASTNode[]): Boundary {
   return boundary as Boundary
 }
 
+  
 function processPath(nodes: ASTNode[]): Path {
   // Find the path node which contains layer, width and coordinates
   const pathNode = nodes.find(
@@ -339,6 +342,7 @@ function processPath(nodes: ASTNode[]): Path {
       .map((node) => node.value as number),
   };
 
+  
 function processRule(nodes: ASTNode[]): Rule {
   const rule: Partial<Rule> = { clearances: [] };
 
@@ -363,6 +367,7 @@ function processRule(nodes: ASTNode[]): Rule {
   return rule as Rule;
 }
 
+  
 function processClearance(nodes: ASTNode[]): Clearance {
   const clearance: Partial<Clearance> = {};
   if (nodes[1]?.type === "Atom" && typeof nodes[1].value === "number") {
@@ -379,9 +384,9 @@ function processClearance(nodes: ASTNode[]): Clearance {
     }
   }
   return clearance as Clearance;
+}
 
-
-  
+ 
 export function processPlacement(nodes: ASTNode[]): Placement {
   const placement: Placement = { components: [] };
 
@@ -394,7 +399,6 @@ export function processPlacement(nodes: ASTNode[]): Placement {
 }
 
   
-
 function processComponent(nodes: ASTNode[]): ComponentPlacement {
   const component: Partial<ComponentPlacement> = {
     name: nodes[1]?.type === "Atom" ? (nodes[1].value as string) : "",
@@ -406,7 +410,6 @@ function processComponent(nodes: ASTNode[]): ComponentPlacement {
       component.places.push(processPlace(node.children));
     }
   });
-
   return component as ComponentPlacement;
 }
 
@@ -495,9 +498,9 @@ export function processLibrary(nodes: ASTNode[]): Library {
       }
     }
  }); 
-
   return library as Library
 }
+  
 
 function processImage(nodes: ASTNode[]): Image {
   const image: Partial<Image> = {}
@@ -679,8 +682,7 @@ export function processNetwork(nodes: ASTNode[]): Network {
         }
       }
     }
-  });
-  
+  }); 
   return network as Network
 }
 
@@ -793,9 +795,9 @@ export function processWiring(nodes: ASTNode[]): Wiring {
       }
     }
   });
-
   return wiring as Wiring;
 }
+
 
 export function processVia(nodes: ASTNode[]): Wire | null {
   const coords = getViaCoords(nodes);
@@ -823,9 +825,9 @@ export function processVia(nodes: ASTNode[]): Wire | null {
   if (netNode?.children?.[1]?.type === "Atom") {
     wire.net = String(netNode.children[1].value);
   }
-
   return wire as Wire;
 }
+
 
 function processWire(nodes: ASTNode[]): Wire {
   const wire: Partial<Wire> = {}
