@@ -131,6 +131,7 @@ export function processPCB(nodes: ASTNode[]): DsnPcb {
           pcb.parser = processParser(element.children.slice(1));
         }
       }
+      
 
                 const key = keyNode.value;
         switch (key) {
@@ -194,10 +195,11 @@ export function processParser(nodes: ASTNode[]): ParserType {
             if (typeof value === "string") parser.host_version = value
             break
         }
-      }
+    }
     }
   })
   return parser as ParserType
+}
 
   
 export function processResolution(nodes: ASTNode[]): Resolution {
@@ -496,8 +498,9 @@ export function processLibrary(nodes: ASTNode[]): Library {
     }
  }); 
   return library as Library
+}
 
-
+  
 function processImage(nodes: ASTNode[]): Image {
   const image: Partial<Image> = {}
   if (nodes[1].type === "Atom" && typeof nodes[1].value === "string") {
@@ -519,10 +522,10 @@ function processImage(nodes: ASTNode[]): Image {
       }
     }
   });
-
   return image as Image
 }
 
+  
 function processOutline(nodes: ASTNode[]): Outline {
   const outline: Partial<Outline> = {}
     nodes.forEach((node) => {
@@ -534,8 +537,7 @@ function processOutline(nodes: ASTNode[]): Outline {
     ) {
       outline.path = processPath(node.children);
     }
-  });
-  
+  });  
   return outline as Outline
 }
 
@@ -679,8 +681,9 @@ export function processNetwork(nodes: ASTNode[]): Network {
       }
     }
   }); 
-  return network as Network
-
+return network as Network
+}
+    
     
 function processNet(nodes: ASTNode[]): Net {
   const net: Partial<Net> = {}
@@ -705,10 +708,10 @@ function processNet(nodes: ASTNode[]): Net {
       });
     }
   });
-
   return net as Net
 }
 
+  
 function processClass(nodes: ASTNode[]): Class {
   const classObj: Partial<Class> = {}
   if (
@@ -750,10 +753,10 @@ function processClass(nodes: ASTNode[]): Class {
     }
     i++
   }
-
   return classObj as Class
 }
 
+  
 function processCircuit(nodes: ASTNode[]): Circuit {
   const circuit: Partial<Circuit> = {}
     nodes.forEach((node) => {
@@ -791,8 +794,9 @@ export function processWiring(nodes: ASTNode[]): Wiring {
     }
   });
   return wiring as Wiring;
+}
 
-
+  
 export function processVia(nodes: ASTNode[]): Wire | null {
   const coords = getViaCoords(nodes);
   if (!coords) {
@@ -820,6 +824,7 @@ export function processVia(nodes: ASTNode[]): Wire | null {
     wire.net = String(netNode.children[1].value);
   }
   return wire as Wire;
+}
 
 
 function processWire(nodes: ASTNode[]): Wire {
@@ -879,6 +884,7 @@ function processWire(nodes: ASTNode[]): Wire {
   return wire as Wire
 }
 
+  
 function processSessionNode(ast: ASTNode): DsnSession {
   const session: DsnSession = {
     is_dsn_session: true,
@@ -965,10 +971,10 @@ function processSessionNode(ast: ASTNode): DsnSession {
         };
         return net;
       });
-
   return session
+   }
 
-
+    
 function processPathShape(nodes: ASTNode[]): PathShape {
   if (
     nodes[1]?.type === "Atom" &&
@@ -990,8 +996,3 @@ function processPathShape(nodes: ASTNode[]): PathShape {
   }
   throw new Error("Invalid path shape format")
       }
-    }
-  }
-}
-}
-}
