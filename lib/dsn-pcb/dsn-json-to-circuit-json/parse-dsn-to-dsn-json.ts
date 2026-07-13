@@ -990,7 +990,8 @@ function processPathShape(nodes: ASTNode[]): PathShape {
   }
   throw new Error("Invalid path shape format")
       }
-   }
- }
-}  
+    }
+  }
+}
+}
 }
