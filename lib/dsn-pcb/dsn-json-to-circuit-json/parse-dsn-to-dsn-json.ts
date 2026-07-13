@@ -394,7 +394,6 @@ export function processPlacement(nodes: ASTNode[]): Placement {
     }
   });
   return placement;
-}
 
   
 function processComponent(nodes: ASTNode[]): ComponentPlacement {
@@ -994,3 +993,4 @@ function processPathShape(nodes: ASTNode[]): PathShape {
    }
  }
 }  
+}
