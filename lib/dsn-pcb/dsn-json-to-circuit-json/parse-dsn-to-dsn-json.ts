@@ -161,9 +161,8 @@ export function processPCB(nodes: ASTNode[]): DsnPcb {
             pcb.wiring = processWiring(element.children.slice(1)) as any;
             break;
         }
-      })
+      
   
-
   return pcb as DsnPcb
 }
 
@@ -547,7 +546,7 @@ function processOutline(nodes: ASTNode[]): Outline {
   
 function processPin(nodes: ASTNode[]): Pin | null {
   const pin: Partial<Pin> = {};
-
+  try {
   // Get padstack name safely
   if (nodes[1]?.type !== "Atom") {
     console.debug("Unsupported pin padstack_name format:", nodes);
@@ -594,12 +593,7 @@ function processPin(nodes: ASTNode[]): Pin | null {
     pin.x = xValue;
     pin.y = yValue;
     return pin as Pin;
-  } catch (error) {
-    console.error("Pin processing error:", error);
-    console.error("Problematic nodes:", JSON.stringify(nodes, null, 2));
-    throw error;
   }
-
 
   function processPadstack(nodes: ASTNode[]): Padstack {
   const padstack: Partial<Padstack> = {};
