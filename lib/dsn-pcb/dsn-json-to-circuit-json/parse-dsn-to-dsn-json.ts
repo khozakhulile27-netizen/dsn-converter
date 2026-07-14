@@ -107,7 +107,6 @@ function processPcbNode(node: ASTNode): any {
   return null    
 }
 
-
 export function processPCB(nodes: ASTNode[]): DsnPcb {
   const pcb: Partial<DsnPcb> = {
     is_dsn_pcb: true,
@@ -166,7 +165,6 @@ export function processPCB(nodes: ASTNode[]): DsnPcb {
   return pcb as DsnPcb
 }
 
-  
 export function processParser(nodes: ASTNode[]): ParserType {
   const parser: Partial<ParserType> = {}
   nodes.forEach((node) => {
@@ -200,7 +198,6 @@ export function processParser(nodes: ASTNode[]): ParserType {
   })
   return parser as ParserType
 }
-
   
 export function processResolution(nodes: ASTNode[]): Resolution {
   const [_, unitNode, valueNode] = nodes
@@ -217,7 +214,6 @@ export function processResolution(nodes: ASTNode[]): Resolution {
   } else {
     throw new Error("Invalid resolution format")
   }
-
 
 export function processStructure(nodes: ASTNode[]): Structure {
   const structure: Structure = {
@@ -250,8 +246,7 @@ export function processStructure(nodes: ASTNode[]): Structure {
     }
   });
   return structure as Structure;
-
-  
+ 
 function processLayer(nodes: ASTNode[]): Layer {
   const layer: Partial<Layer> = {}
   if (nodes[1].type === "Atom" && typeof nodes[1].value === "string") {
@@ -269,7 +264,6 @@ function processLayer(nodes: ASTNode[]): Layer {
   })
   return layer as Layer
 }
-
   
 function processProperty(nodes: ASTNode[]): { index: number } {
   const property: any = {};
@@ -289,7 +283,6 @@ function processProperty(nodes: ASTNode[]): { index: number } {
   });
   return property;
  }
-
   
 function processBoundary(nodes: ASTNode[]): Boundary {
   const boundary: Partial<Boundary> = {}
@@ -304,7 +297,6 @@ function processBoundary(nodes: ASTNode[]): Boundary {
   }
   return boundary as Boundary
 }
-
   
 function processPath(nodes: ASTNode[]): Path {
   // Find the path node which contains layer, width and coordinates
@@ -341,7 +333,6 @@ function processPath(nodes: ASTNode[]): Path {
       .filter((node) => node.type === "Atom" && typeof node.value === "number")
       .map((node) => node.value as number),
   };
-
   
 function processRule(nodes: ASTNode[]): Rule {
   const rule: Partial<Rule> = { clearances: [] };
@@ -363,10 +354,8 @@ function processRule(nodes: ASTNode[]): Rule {
       }
     }
   });
-
   return rule as Rule;
 }
-
   
 function processClearance(nodes: ASTNode[]): Clearance {
   const clearance: Partial<Clearance> = {};
@@ -385,7 +374,6 @@ function processClearance(nodes: ASTNode[]): Clearance {
   }
   return clearance as Clearance;
 }
-
  
 export function processPlacement(nodes: ASTNode[]): Placement {
   const placement: Placement = { components: [] };
@@ -396,7 +384,6 @@ export function processPlacement(nodes: ASTNode[]): Placement {
     }
   });
   return placement;
-
   
 function processComponent(nodes: ASTNode[]): ComponentPlacement {
   const component: Partial<ComponentPlacement> = {
@@ -411,7 +398,6 @@ function processComponent(nodes: ASTNode[]): ComponentPlacement {
   });
   return component as ComponentPlacement;
 }
-
 
 function processPlace(nodes: ASTNode[]): Places {
   const places: Partial<Places> = {}
@@ -499,7 +485,6 @@ export function processLibrary(nodes: ASTNode[]): Library {
  }); 
   return library as Library
 }
-
   
 function processImage(nodes: ASTNode[]): Image {
   const image: Partial<Image> = {}
@@ -524,7 +509,6 @@ function processImage(nodes: ASTNode[]): Image {
   });
   return image as Image
 }
-
   
 function processOutline(nodes: ASTNode[]): Outline {
   const outline: Partial<Outline> = {}
@@ -540,7 +524,6 @@ function processOutline(nodes: ASTNode[]): Outline {
   });  
   return outline as Outline
 }
-
   
 function processPin(nodes: ASTNode[]): Pin | null {
   const pin: Partial<Pin> = {};
@@ -620,7 +603,6 @@ function processPin(nodes: ASTNode[]): Pin | null {
   return padstack as Padstack;
 }
 
-
 function processShape(nodes: ASTNode[]): Shape {
   const shapeContentNode = nodes.find(node => node.type === "List");
   
@@ -639,7 +621,6 @@ function processShape(nodes: ASTNode[]): Shape {
     }
 }
 
-  
 function processCircleShape(nodes: ASTNode[]): CircleShape {
   const circle: Partial<CircleShape> = { shapeType: "circle" };
 
@@ -660,8 +641,7 @@ function processCircleShape(nodes: ASTNode[]): CircleShape {
       return circle as CircleShape;
     throw new Error("Invalid circle shape format");
   }
-  
-   
+     
 export function processNetwork(nodes: ASTNode[]): Network {
   const network: Partial<Network> = {
     nets: [],
@@ -683,8 +663,7 @@ export function processNetwork(nodes: ASTNode[]): Network {
   }); 
 return network as Network
 }
-    
-    
+       
 function processNet(nodes: ASTNode[]): Net {
   const net: Partial<Net> = {}
   if (nodes[1].type === "Atom" && typeof nodes[1].value === "string") {
@@ -711,7 +690,6 @@ function processNet(nodes: ASTNode[]): Net {
   return net as Net
 }
 
-  
 function processClass(nodes: ASTNode[]): Class {
   const classObj: Partial<Class> = {}
   if (
@@ -755,7 +733,6 @@ function processClass(nodes: ASTNode[]): Class {
   }
   return classObj as Class
 }
-
   
 function processCircuit(nodes: ASTNode[]): Circuit {
   const circuit: Partial<Circuit> = {}
@@ -776,8 +753,7 @@ function processCircuit(nodes: ASTNode[]): Circuit {
   });
   return circuit as Circuit
 }
-  
-  
+    
 export function processWiring(nodes: ASTNode[]): Wiring {
   const wiring: Partial<Wiring> = {
     wires: [],
@@ -795,7 +771,6 @@ export function processWiring(nodes: ASTNode[]): Wiring {
   });
   return wiring as Wiring;
 }
-
   
 export function processVia(nodes: ASTNode[]): Wire | null {
   const coords = getViaCoords(nodes);
@@ -826,10 +801,8 @@ export function processVia(nodes: ASTNode[]): Wire | null {
   return wire as Wire;
 }
 
-
 function processWire(nodes: ASTNode[]): Wire {
   const wire: Partial<Wire> = {}
-
     nodes.forEach((node) => {
     if (node.type === "List" && node.children) {
       const [keyNode, ...rest] = node.children;
@@ -839,7 +812,6 @@ function processWire(nodes: ASTNode[]): Wire {
           case "path":
             wire.path = processPath(node.children);
             break;
-
           case "polyline_path":
             // Handle polyline path similar to regular path
             if (
@@ -880,10 +852,8 @@ function processWire(nodes: ASTNode[]): Wire {
       }
     }
   })
-
   return wire as Wire
 }
-
   
 function processSessionNode(ast: ASTNode): DsnSession {
   const session: DsnSession = {
@@ -973,7 +943,6 @@ function processSessionNode(ast: ASTNode): DsnSession {
       });
   return session
    }
-
     
 function processPathShape(nodes: ASTNode[]): PathShape {
   if (
