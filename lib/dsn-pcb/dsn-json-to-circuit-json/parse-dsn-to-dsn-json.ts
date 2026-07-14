@@ -292,68 +292,66 @@ function processBoundary(nodes: ASTNode[]): Boundary {
   })
   // Ensure boundary.path is defined
   if (!boundary.path) {
-    boundary.path = { layer: "", width: 0, coordinates: [] }
+  boundary.path = { layer: "F.Cu", width: 0, coordinates: [] }
   }
   return boundary as Boundary
 }
 
 
 function processPath(nodes: ASTNode[]): Path {
-  // Find the path node which contains layer, width and coordinates
   const pathNode = nodes.find(
     (node) =>
       node.type === "List" &&
       node.children?.[0]?.type === "Atom" &&
       node.children[0].value === "path",
   )
-  if (!pathNode) {
-    // If no path node found, use the nodes directly
-    // This handles the case where nodes is already the path content
+
+  // If we found a path node, use its children
+  if (pathNode && pathNode.children) {
+    const pathChildren = pathNode.children;
     return {
-      layer: nodes[1]?.type === "Atom" ? (nodes[1].value as string) : "F.Cu",
-      width: nodes[2]?.type === "Atom" ? (nodes[2].value as number) : 200,
-      coordinates: nodes
-        .slice(3)
-        .filter(
-          (node) => node.type === "Atom" && typeof node.value === "number",
-        )
-        .map((node) => node.value as number),
+      layer: pathChildren[1]?.type === "Atom"? (pathChildren[1].value as string) : "F.Cu",
+      width: pathChildren[2]?.type === "Atom"? (pathChildren[2].value as number) : 200,
+      coordinates: pathChildren
+       .slice(3)
+       .filter((node) => node.type === "Atom" && typeof node.value === "number")
+       .map((node) => node.value as number),
     }
   }
-  // Process the path node children
-    // Process the path node children
-  const pathChildren = pathNode.children ?? [];
+  
+  // Otherwise use nodes directly
   return {
-    layer: pathChildren[1]?.type === "Atom" ? (pathChildren[1].value as string) : "F.Cu",
-    width: pathChildren[2]?.type === "Atom" ? (pathChildren[2].value as number) : 200,
-    coordinates: pathChildren
-      .slice(3)
-      .filter((node) => node.type === "Atom" && typeof node.value === "number")
-      .map((node) => node.value as number),
-  };
+    layer: nodes[1]?.type === "Atom"? (nodes[1].value as string) : "F.Cu",
+    width: nodes[2]?.type === "Atom"? (nodes[2].value as number) : 200,
+    coordinates: nodes
+     .slice(3)
+     .filter((node) => node.type === "Atom" && typeof node.value === "number")
+     .map((node) => node.value as number),
+  }
 }
 
 
 function processRule(nodes: ASTNode[]): Rule {
-  const rule: Partial<Rule> = { clearances: [] };
+  const rule: Partial<Rule> = { 
+    clearances: [],
+    width: 0, // <-- add default
+  };
   nodes.forEach((node) => {
     if (node.type === "List" && node.children && node.children.length > 0) {
-      const [keyNode, ...rest] = node.children;
-      if (keyNode?.type === "Atom" && typeof keyNode.value === "string") {
+      const [keyNode,...rest] = node.children;
+      if (keyNode.type === "Atom" && typeof keyNode.value === "string") {
         switch (keyNode.value) {
           case "width":
-            if (rest[0]?.type === "Atom" && typeof rest[0].value === "number") {
-              rule.width = rest[0].value;
-            }
-            break;
+            rule.width = rest[0]?.value as number
+            break
           case "clearance":
-            (rule.clearances ?? []).push(processClearance(node.children));
-            break;
+            rule.clearances?.push(rest[0]?.value as number)
+            break
         }
       }
     }
   });
-  return rule as Rule;
+  return rule as Rule // <-- cast it
 }
 
 
