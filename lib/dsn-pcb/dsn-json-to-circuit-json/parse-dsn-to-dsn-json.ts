@@ -455,6 +455,7 @@ places.rotation = nodes[coordIndex + 3].value as number;
     ) {
       places.PN = String(node.children[1].value)
       break
+    } 
     }
   }
   return places as Places
