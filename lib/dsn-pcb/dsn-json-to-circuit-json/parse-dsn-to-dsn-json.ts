@@ -215,8 +215,8 @@ export function processStructure(nodes: ASTNode[]): Structure {
   const structure: Structure = {
     layers: [],
     boundary: { path: { layer: "F.Cu", width: 0, coordinates: [] } }, // <-- fix: "F.Cu" not ""
-    via: [], // <-- fix: [] not "" if type is Via[]
-    rule: [], // <-- keep this
+    via: "", // <-- fix: [] not "" if type is Via[]
+    rule: []
   };
   nodes.forEach((node) => {
     if (node.type === "List" && node.children && node.children.length > 0) {
@@ -348,6 +348,7 @@ function processRule(nodes: ASTNode[]): Rule {
   const rule: Partial<Rule> = { 
     clearances: [],
     width: 0, // <-- add default
+    types: []
   };
   nodes.forEach((node) => {
     if (node.type === "List" && node.children && node.children.length > 0) {
@@ -398,9 +399,13 @@ export function processPlacement(nodes: ASTNode[]): Placement {
 
 
 function processComponent(nodes: ASTNode[]): ComponentPlacement {
-  const component: Partial<ComponentPlacement> = {
-    name: nodes[1]?.type === "Atom" ? (nodes[1].value as string) : "",
-    places: [],
+  const component = {
+  refdes: place.refdes,
+  PN: place.PN, // not pn
+  x: place.x,
+  y: place.y,
+  side: place.side === "back"? "back" : "front", // narrow union
+  rotation: place.rotation,
   };
   nodes.slice(2).forEach((node) => {
     if (node.type === "List" && node.children && node.children[0]?.value === "place") {
