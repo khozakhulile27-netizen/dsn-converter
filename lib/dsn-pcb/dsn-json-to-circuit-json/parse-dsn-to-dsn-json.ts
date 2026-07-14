@@ -214,6 +214,7 @@ export function processResolution(nodes: ASTNode[]): Resolution {
   } else {
     throw new Error("Invalid resolution format")
   }
+}
 
 export function processStructure(nodes: ASTNode[]): Structure {
   const structure: Structure = {
@@ -244,8 +245,9 @@ export function processStructure(nodes: ASTNode[]): Structure {
         }
       }
     }
-  });
+  })),
   return structure as Structure;
+}
  
 function processLayer(nodes: ASTNode[]): Layer {
   const layer: Partial<Layer> = {}
@@ -384,6 +386,7 @@ export function processPlacement(nodes: ASTNode[]): Placement {
     }
   });
   return placement;
+}
   
 function processComponent(nodes: ASTNode[]): ComponentPlacement {
   const component: Partial<ComponentPlacement> = {
@@ -641,7 +644,8 @@ function processCircleShape(nodes: ASTNode[]): CircleShape {
       return circle as CircleShape;
     throw new Error("Invalid circle shape format");
   }
-     
+  }
+  
 export function processNetwork(nodes: ASTNode[]): Network {
   const network: Partial<Network> = {
     nets: [],
@@ -731,6 +735,7 @@ function processClass(nodes: ASTNode[]): Class {
     }
     i++
   }
+}
   return classObj as Class
 }
   
@@ -962,6 +967,6 @@ function processPathShape(nodes: ASTNode[]): PathShape {
         )
         .map((node) => node.value as number),
     }
-  }
+  })),
   throw new Error("Invalid path shape format")
       }
