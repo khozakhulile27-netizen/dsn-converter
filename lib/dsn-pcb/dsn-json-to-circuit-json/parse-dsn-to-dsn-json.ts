@@ -240,9 +240,10 @@ export function processStructure(nodes: ASTNode[]): Structure {
         }
       }
     }
-  }));
+  });
   return structure as Structure;
 }
+
 
 
 function processLayer(nodes: ASTNode[]): Layer {
@@ -960,6 +961,6 @@ function processPathShape(nodes: ASTNode[]): PathShape {
         )
         .map((node) => node.value as number),
     }
-  }));
+  }
   throw new Error("Invalid path shape format")
       }
