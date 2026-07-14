@@ -403,10 +403,10 @@ function processComponent(nodes: ASTNode[]): ComponentPlacement {
 function processPlace(nodes: ASTNode[]): Places {
   const places: Places = {
   refdes: String(nodes[1].value),
-  pn: "",
+  PN: "",
   x: 0,
   y: 0,
-  side: "front" as "front" | "back",
+  side: "front",
   rotation: 0
 };
   // Ensure we have at least the basic required nodes
@@ -444,20 +444,23 @@ if (sideValue === "front" || sideValue === "back") {
   places.side = sideValue as "front" | "back";
 }
 places.rotation = nodes[coordIndex + 3].value as number;
-    const node = nodes[i]
-    if (
-      node.type === "List" &&
-      node.children &&
-      node.children[0].type === "Atom" &&
-      node.children[0].value === "PN" &&
-      node.children[1] &&
-      node.children[1].type === "Atom"
-    ) {
-      places.PN = String(node.children[1].value)
-      break
-    } 
-    }
+    // Process PN if it exists
+for (let i = coordIndex + 4; i < nodes.length; i++) { // <-- declare i here
+  for (let i = coordIndex + 4; i < nodes.length; i++) {
+  const node = nodes[i];
+  if (
+    node?.type === "List" &&
+    node.children?.[0]?.type === "Atom" &&
+    node.children[0].value === "PN" &&
+    node.children?.[1]?.type === "Atom"
+  ) {
+    places.pn = String(node.children[1].value); // or PN if type wants uppercase
+    break;
   }
+  }
+  }
+}
+}
   return places as Places
 }
 
@@ -684,10 +687,12 @@ function processPathShape(nodes: ASTNode[]): Shape {
 
 
 export function processNetwork(nodes: ASTNode[]): Network {
-  const network: Partial<Network> = {
-    nets: [],
-    classes: [],
-  }
+  const network: Network = {
+  nets: [],
+  classes: [],
+  // add any other required fields here with defaults
+  name: "", // example
+};
     nodes.forEach((node) => {
     if (node.type === "List" && node.children) {
       const [keyNode, ...rest] = node.children;
@@ -957,7 +962,6 @@ function processSessionNode(ast: ASTNode): DsnSession {
       };
     }
 
-    // Extract network_out section
       const networkNode = routesNode.children.find((child) => 
     child.type === "List" && child.children?.[0]?.type === "Atom" && child.children[0].value === "network_out"
   );
