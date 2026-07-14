@@ -214,13 +214,13 @@ export function processResolution(nodes: ASTNode[]): Resolution {
 export function processStructure(nodes: ASTNode[]): Structure {
   const structure: Structure = {
     layers: [],
-    boundary: { path: { layer: "", width: 0, coordinates: [] } },
-    via: "",
-    rule: []
+    boundary: { path: { layer: "F.Cu", width: 0, coordinates: [] } }, // <-- fix: "F.Cu" not ""
+    via: [], // <-- fix: [] not "" if type is Via[]
+    rule: [], // <-- keep this
   };
   nodes.forEach((node) => {
     if (node.type === "List" && node.children && node.children.length > 0) {
-      const [keyNode, ...rest] = node.children;
+      const [keyNode,...rest] = node.children;
       if (keyNode && keyNode.type === "Atom" && typeof keyNode.value === "string") {
         const key = keyNode.value;
         switch (key) {
@@ -232,10 +232,20 @@ export function processStructure(nodes: ASTNode[]): Structure {
             structure.boundary = processBoundary(node.children.slice(1));
             break;
           case "via":
-            // Safe access
+            // Handle (via Via[0]) format
             if (node.children.length > 1 && node.children[1].type === "Atom") {
-              structure.via = node.children[1].value as string;
+              const viaName = node.children[1].value as string
+              // If via is string[]
+              if (Array.isArray(structure.via)) {
+                structure.via.push(viaName)
+              } else {
+                structure.via = viaName // if it's just string
+              }
             }
+            break;
+          case "rule": // <-- ADD THIS - was missing
+            structure.rule.push(processRule(node.children.slice(1)));
+            break;
         }
       }
     }
@@ -244,27 +254,31 @@ export function processStructure(nodes: ASTNode[]): Structure {
 }
 
 
-
 function processLayer(nodes: ASTNode[]): Layer {
-  const layer: Partial<Layer> = {}
-  if (nodes[1].type === "Atom" && typeof nodes[1].value === "string") {
-    layer.name = nodes[1].value as string 
-}
-  nodes.slice(2).forEach(node => { 
+  const layer: Partial<Layer> = { name: "" }; // add default name
+  
+  if (nodes[1]?.type === "Atom" && typeof nodes[1].value === "string") { // safe access
+    layer.name = nodes[1].value as string;
+  }
+  
+  nodes.slice(2).forEach((node) => {
     if (node.type === "List" && node.children) {
-    switch (node.children[0]?.value) {
+      const firstChild = node.children[0];
+      if (firstChild?.type === "Atom" && typeof firstChild.value === "string") {
+        switch (firstChild.value) {
           case "property":
-            layer.property = processProperty(node.children.slice(1))
-            break
+            layer.property = processProperty(node.children.slice(1));
+            break;
         }
       }
-  })
-  return layer as Layer
+    }
+  });
+  return layer as Layer;
 }
 
 
 function processProperty(nodes: ASTNode[]): { index: number } {
-  const property: any = {};
+  const property: { index: number } = { index: 0 }; // default, not any
   nodes.forEach((node) => {
     if (node.type === "List" && node.children && node.children.length >= 2) {
       const keyNode = node.children[0];
@@ -280,7 +294,7 @@ function processProperty(nodes: ASTNode[]): { index: number } {
     }
   });
   return property;
- }
+}
 
 
 function processBoundary(nodes: ASTNode[]): Boundary {
@@ -304,10 +318,9 @@ function processPath(nodes: ASTNode[]): Path {
       node.type === "List" &&
       node.children?.[0]?.type === "Atom" &&
       node.children[0].value === "path",
-  )
+  );
 
-  // If we found a path node, use its children
-  if (pathNode && pathNode.children) {
+  if (pathNode?.children && pathNode.children.length >= 3) { // check length
     const pathChildren = pathNode.children;
     return {
       layer: pathChildren[1]?.type === "Atom"? (pathChildren[1].value as string) : "F.Cu",
@@ -316,10 +329,10 @@ function processPath(nodes: ASTNode[]): Path {
        .slice(3)
        .filter((node) => node.type === "Atom" && typeof node.value === "number")
        .map((node) => node.value as number),
-    }
+    };
   }
   
-  // Otherwise use nodes directly
+  // fallback if no path node or invalid
   return {
     layer: nodes[1]?.type === "Atom"? (nodes[1].value as string) : "F.Cu",
     width: nodes[2]?.type === "Atom"? (nodes[2].value as number) : 200,
@@ -327,7 +340,7 @@ function processPath(nodes: ASTNode[]): Path {
      .slice(3)
      .filter((node) => node.type === "Atom" && typeof node.value === "number")
      .map((node) => node.value as number),
-  }
+  };
 }
 
 
