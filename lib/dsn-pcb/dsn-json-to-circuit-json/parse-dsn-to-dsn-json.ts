@@ -42,7 +42,6 @@ import type {
 
 const debug = Debug("dsn-converter:parse-dsn-to-dsn-json")
 
-
 export function parseDsnToDsnJson(dsnString: string, filename?: string): DsnJson {
   if (!dsnString?.trim()) {
     throw new Error("Empty DSN string provided");
@@ -51,54 +50,36 @@ export function parseDsnToDsnJson(dsnString: string, filename?: string): DsnJson
   const ast = parseSexprToAst(tokens);
   // 2. Safely check for session or pcb file type
   if (ast.type === "List" && ast.children && ast.children[0]?.type === "Atom") {
-    const rootNode = ast.children[0].value;  
+    const rootNode = ast.children[0].value;
     if (rootNode === "session") {
       const session = processSessionNode(ast);
       // Ensure filename is attached safely
-      session.filename = filename ?? session.filename ?? "session.dsn";
+      session.filename = filename?? session.filename?? "session.dsn";
       return session;
     } else if (rootNode === "pcb") {
       const pcb = processPcbNode(ast) as DsnPcb;
       // Ensure filename is attached safely
-      pcb.filename = filename ?? pcb.filename ?? "board.pcb";
+      pcb.filename = filename?? pcb.filename?? "board.pcb";
       return pcb;
     }
   }
   throw new Error("Invalid DSN file format");
 }
-// **Helper Functions to Process AST Nodes**
-// The following functions map the AST nodes to the defined TypeScript interfaces.
-function processPcbNode(node: ASTNode): any {
+
+
+function processPcbNode(node: ASTNode): DsnPcb {
   if (node.type === "List" && node.children && node.children.length > 0) {
-    const [head, ...tail] = node.children;
-    if (head && head.type === "Atom" && typeof head.value === "string") {
-      switch (head.value) {
-        case "session":
-          return processSessionNode(node);
-        case "pcb":
-          return processPCB(tail);
-        case "parser":
-          return processParser(tail);
-        case "resolution":
-          return node.children.length > 1 ? processResolution(node.children) : null;
-        case "unit":
-          return node.children.length > 1 ? node.children[1].value : null;
-        case "structure":
-          return processStructure(tail);
-        case "placement":
-          return processPlacement(tail);
-        case "library":
-          return processLibrary(tail);
-        case "network":
-          return processNetwork(tail);
-        case "wiring":
-          return processWiring(tail);
-        default:
-          return null;
+    const [head,...tail] = node.children;
+    if (head?.type === "Atom" && typeof head.value === "string") {
+      if (head.value === "pcb") {
+        return processPCB(tail);
+      }
+      if (head.value === "session") {
+        throw new Error("Got session node in pcb path");
       }
     }
   }
-  return null    
+  throw new Error("Invalid PCB node");
 }
 
 
@@ -118,12 +99,7 @@ export function processPCB(nodes: ASTNode[]): DsnPcb {
     if (element.type === "List" && element.children && element.children.length > 0) {
       const keyNode = element.children[0];
       if (keyNode && keyNode.type === "Atom" && typeof keyNode.value === "string") {
-        // Safe access to parser logic
-        if (keyNode.value === "parser") {
-          pcb.parser = processParser(element.children.slice(1));
-        }
-      }
-                const key = keyNode.value;
+        const key = keyNode.value;
         switch (key) {
           case "parser":
             pcb.parser = processParser(element.children.slice(1));
@@ -132,29 +108,30 @@ export function processPCB(nodes: ASTNode[]): DsnPcb {
             pcb.resolution = processResolution(element.children);
             break;
           case "unit":
-            if (element.children.length > 1 && element.children[1].type === "Atom") {
+            if (element.children[1]?.type === "Atom") {
               pcb.unit = element.children[1].value as string;
             }
             break;
           case "structure":
-            pcb.structure = processStructure(element.children.slice(1)) as any;
+            pcb.structure = processStructure(element.children.slice(1));
             break;
           case "placement":
-            pcb.placement = processPlacement(element.children.slice(1)) as any;
+            pcb.placement = processPlacement(element.children.slice(1));
             break;
           case "library":
             pcb.library = processLibrary(element.children.slice(1));
             break;
           case "network":
-            pcb.network = processNetwork(element.children.slice(1)) as any;
+            pcb.network = processNetwork(element.children.slice(1));
             break;
           case "wiring":
-            pcb.wiring = processWiring(element.children.slice(1)) as any;
+            pcb.wiring = processWiring(element.children.slice(1));
             break;
         }
-        }
+      }
     }
-  return pcb as DsnPcb
+  }
+  return pcb as DsnPcb;
 }
 
 
@@ -214,9 +191,9 @@ export function processResolution(nodes: ASTNode[]): Resolution {
 export function processStructure(nodes: ASTNode[]): Structure {
   const structure: Structure = {
     layers: [],
-    boundary: { path: { layer: "F.Cu", width: 0, coordinates: [] } }, // <-- fix: "F.Cu" not ""
-    via: "", // <-- fix: [] not "" if type is Via[]
-    rule: []
+    boundary: { path: { layer: "F.Cu", width: 0, coordinates: [] } },
+    via: "",
+    rule: [],
   };
   nodes.forEach((node) => {
     if (node.type === "List" && node.children && node.children.length > 0) {
@@ -225,25 +202,18 @@ export function processStructure(nodes: ASTNode[]): Structure {
         const key = keyNode.value;
         switch (key) {
           case "layer":
-            // Safe push
             structure.layers.push(processLayer(node.children));
             break;
           case "boundary":
             structure.boundary = processBoundary(node.children.slice(1));
             break;
           case "via":
-            // Handle (via Via[0]) format
             if (node.children.length > 1 && node.children[1].type === "Atom") {
-              const viaName = node.children[1].value as string
-              // If via is string[]
-              if (Array.isArray(structure.via)) {
-                structure.via.push(viaName)
-              } else {
-                structure.via = viaName // if it's just string
-              }
+              const viaName = node.children[1].value as string;
+              structure.via = viaName;
             }
             break;
-          case "rule": // <-- ADD THIS - was missing
+          case "rule":
             structure.rule.push(processRule(node.children.slice(1)));
             break;
         }
@@ -252,7 +222,6 @@ export function processStructure(nodes: ASTNode[]): Structure {
   });
   return structure as Structure;
 }
-
 
 function processLayer(nodes: ASTNode[]): Layer {
   const layer: Partial<Layer> = { name: "" }; // add default name
@@ -359,8 +328,8 @@ function processRule(nodes: ASTNode[]): Rule {
             rule.width = rest[0]?.value as number
             break
           case "clearance":
-            rule.clearances?.push(rest[0]?.value as number)
-            break
+  rule.clearances?.push({ value: rest[0]?.value as number, types: [] })
+  break
         }
       }
     }
@@ -460,8 +429,6 @@ if (sideValue === "front" || sideValue === "back") {
   places.side = sideValue as "front" | "back";
 }
 places.rotation = nodes[coordIndex + 3].value as number;
-    // Process PN if it exists
-for (let i = coordIndex + 4; i < nodes.length; i++) { // <-- declare i here
   for (let i = coordIndex + 4; i < nodes.length; i++) {
   const node = nodes[i];
   if (
@@ -472,7 +439,6 @@ for (let i = coordIndex + 4; i < nodes.length; i++) { // <-- declare i here
   ) {
     places.pn = String(node.children[1].value); // or PN if type wants uppercase
     break;
-  }
   }
   }
 }
@@ -495,7 +461,7 @@ export function processLibrary(nodes: ASTNode[]): Library {
             // Add safe processing for images if needed
             break;
           case "padstack":
-        (library.padstacks ?? []).push(processPadstack(node.children));
+        library.padstacks.push(processPadstack(node.children));
             break;
         }
       }
@@ -517,10 +483,10 @@ function processImage(nodes: ASTNode[]): Image {
       const [keyNode, ...rest] = node.children;
       if (keyNode?.type === "Atom" && typeof keyNode.value === "string") {
         if (keyNode.value === "outline") {
-         (image.outlines ?? []).push(processOutline(node.children));
+         image.outlines.push(processOutline(node.children));
         } else if (keyNode.value === "pin") {
           const pin = processPin(node.children);
-          if (pin) (image.pins ?? []).push(pin);
+          if (pin) image.pins.push(pin);
         }
       }
     }
@@ -560,24 +526,25 @@ function processPin(nodes: ASTNode[]): Pin | null {
   let xValue: number | undefined;
   let yValue: number | undefined;
   for (let i = 3; i < nodes.length; i++) {
-    const node = nodes[i];
-    const nextNode = nodes[i + 1];
+  const node = nodes[i];
+  if (!node) continue;
+  const nextNode = nodes[i + 1];
     if (node?.type === "Atom" && typeof node.value === "number") {
       if (xValue === undefined) {
-        if (nextNode?.type === "Atom" && String(nextNode.value).toLowerCase().startsWith("e")) {
-          xValue = Number(`${node.value}${nextNode.value}`);
+        if (nextNode?.type === "Atom" && typeof nextNode.value === "string" && nextNode.value.toLowerCase().startsWith("e")) {
+  xValue = Number(`${node.value}${nextNode.value}`);
           i++; // Skip exponent
-        } else {
-          xValue = node.value;
+        } else if (typeof node.value === "number") {
+  xValue = node.value;
+        }
         }
       } else if (yValue === undefined) {
-        if (nextNode?.type === "Atom" && String(nextNode.value).toLowerCase().startsWith("e")) {
-          yValue = Number(`${node.value}${nextNode.value}`);
+        if (nextNode?.type === "Atom" && typeof nextNode.value === "string" && nextNode.value.toLowerCase().startsWith("e")) {
+  yValue = Number(`${node.value}${nextNode.value}`);
           i++; // Skip exponent
-        } else {
-          yValue = node.value;
+        } else if (typeof node.value === "number") {
+  yValue = node.value;
         }
-      }
     }
   }
   if (typeof xValue !== "number" || typeof yValue !== "number") {
@@ -591,33 +558,38 @@ function processPin(nodes: ASTNode[]): Pin | null {
 
   function processPadstack(nodes: ASTNode[]): Padstack {
   const padstack: Padstack = {
-  name: "",
-  shapes: [],
-  attach: "off"
-};
+    name: "",
+    shapes: [],
+    attach: "off",
+  };
   if (nodes[1]?.type === "Atom" && typeof nodes[1].value === "string") {
-    padstack.name = nodes[1].value;
+    padstack.name = nodes[1].value as string;
   }
   nodes.slice(2).forEach((node) => {
     if (node.type === "List" && node.children && node.children.length > 0) {
-      const [keyNode, ...rest] = node.children;
+      const [keyNode,...rest] = node.children;
       if (keyNode?.type === "Atom" && typeof keyNode.value === "string") {
         if (keyNode.value === "shape") {
-        (padstack.shapes ?? []).push(processShape(node.children));
+          padstack.shapes.push(processShape(node.children)); // <-- FIX: direct push
         } else if (keyNode.value === "attach" && rest[0]?.type === "Atom" && typeof rest[0].value === "string") {
-          padstack.attach = rest[0].value;
+          padstack.attach = rest[0].value as Padstack["attach"];
         } else if (keyNode.value === "hole") {
           if (typeof rest[0]?.value === "number") {
-            padstack.hole = { shape: "circle", diameter: rest[0].value };
+            padstack.hole = { shape: "circle", diameter: rest[0]?.type === "Atom" && typeof rest[0].value === "number"? rest[0].value : 0
           } else if (rest[0]?.value === "oval" && rest[1]?.type === "Atom" && rest[2]?.type === "Atom") {
-            padstack.hole = { shape: "oval", width: rest[1].value as number, height: rest[2].value as number };
+            padstack.hole = {
+  shape: "oval",
+  width: rest[1]?.type === "Atom" && typeof rest[1].value === "number"? rest[1].value : 0,
+  height: rest[2]?.type === "Atom" && typeof rest[2].value === "number"? rest[2].value : 0
+};
+     
           }
         }
       }
     }
   });
   return padstack as Padstack;
-}
+  }
 
 
 function processShape(nodes: ASTNode[]): Shape {
@@ -635,27 +607,36 @@ function processShape(nodes: ASTNode[]): Shape {
       }
     }
 }
-// Update line 617 to provide dummy values that satisfy the Shape interface:
-return { 
+return {
   shapeType: "unknown",
-  // Add minimum required fields to satisfy the Shape interface
-  // These values depend on your actual Shape definition
-  width: 0, 
+  width: 0,
   coordinates: [],
-  layer: "top" 
+  layer: "F.Cu"
 } as unknown as Shape;
 }
 
 
 function processPolygonShape(nodes: ASTNode[]): Shape {
-  // Add the logic to parse polygon nodes here
-  // For now, returning a basic shape object will satisfy the compiler
-return { 
-  shapeType: "polygon",
-  width: 0,
-  coordinates: [],
-  layer: "top" 
-} as unknown as Shape; 
+  const shape: Partial<Shape> & { shapeType: string; width: number; coordinates: number[]; layer: string } = {
+    shapeType: "polygon",
+    width: 0,
+    coordinates: [],
+    layer: "F.Cu",
+  };
+
+  // (polygon F.Cu 0 5 x y x y...)
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    if (!n) continue;
+    if (n.type === "Atom" && typeof n.value === "string" && n.value.includes(".Cu")) {
+      shape.layer = n.value;
+    }
+    if (n.type === "Atom" && typeof n.value === "number") {
+      if (i === 2) shape.width = n.value;
+      else shape.coordinates.push(n.value);
+  }
+
+  return shape as unknown as Shape;
 }
 
 
@@ -687,7 +668,7 @@ return {
   shapeType: "rect",
   width: 0,
   coordinates: [],
-  layer: "top" 
+  layer: "F.Cu"
 } as unknown as Shape;  
 }
 
@@ -697,47 +678,50 @@ function processPathShape(nodes: ASTNode[]): Shape {
   shapeType: "path",
   width: 0,
   coordinates: [],
-  layer: "top" 
+  layer: "F.Cu"
 } as unknown as Shape;
 }
 
 
 export function processNetwork(nodes: ASTNode[]): Network {
   const network: Network = {
-  nets: [],
-  classes: [],
-  // add any other required fields here with defaults
-  name: "", // example
-};
-    nodes.forEach((node) => {
+    nets: [],
+    classes: [],
+    name: "",
+  };
+  nodes.forEach((node) => {
     if (node.type === "List" && node.children) {
-      const [keyNode, ...rest] = node.children;
+      const [keyNode,...rest] = node.children;
       if (keyNode?.type === "Atom" && typeof keyNode.value === "string") {
         const key = keyNode.value;
         if (key === "net") {
-         (network.nets ?? []).push(processNet(node.children));
+          network.nets.push(processNet(node.children));
         } else if (key === "class") {
-         (network.classes ?? []).push(processClass(node.children));
+          network.classes.push(processClass(node.children));
         }
       }
     }
-  }); 
-return network as Network
+  });
+  return network as Network;
 }
 
 
 function processNet(nodes: ASTNode[]): Net {
-  const net: Partial<Net> = {}
-  if (nodes[1].type === "Atom" && typeof nodes[1].value === "string") {
-    net.name = nodes[1].value
-  } else {
-    net.name = nodes[1].value?.toString()
-    debug("net name was not a string", net.name)
-        // Process the pins list
+  const net: Partial<Net> & { name: string; pins: string[] } = {
+    name: "",
+    pins: []
+  };
+
+  if (nodes[1]?.type === "Atom" && typeof nodes[1].value === "string") {
+    net.name = nodes[1].value;
+  } else if (nodes[1]?.type === "Atom" && nodes[1].value!== undefined) {
+    net.name = String(nodes[1].value);
+    debug(`net name was not a string`, net.name);
+  }
+
   nodes.slice(2).forEach((node) => {
     if (
       node.type === "List" &&
-      node.children &&
       node.children[0]?.type === "Atom" &&
       node.children[0]?.value === "pins"
     ) {
@@ -749,39 +733,37 @@ function processNet(nodes: ASTNode[]): Net {
       });
     }
   });
-  return net as Net
-}
-}
+
+  return net as Net;
+      }
 
 
 function processClass(nodes: ASTNode[]): Class {
-  const classObj: Partial<Class> = {}
+  const classObj: Partial<Class> & { net_names: string[] } = {
+    net_names: [],
+  };
   if (
-    nodes[1].type === "Atom" &&
+    nodes[1]?.type === "Atom" &&
     typeof nodes[1].value === "string" &&
-    nodes[2].type === "Atom" &&
+    nodes[2]?.type === "Atom" &&
     typeof nodes[2].value === "string"
   ) {
-    classObj.name = nodes[1].value
-    classObj.description = nodes[2].value
+    classObj.name = nodes[1].value;
+    classObj.description = nodes[2].value;
   }
-  // The next nodes until 'circuit' are net names
-  let i = 3
-  classObj.net_names = []
-      while (
-      i < nodes.length &&
-      nodes[i]?.type === "Atom" &&
-      typeof nodes[i]?.value === "string"
-    ) {
-      classObj.net_names?.push(String(nodes[i].value));
-      i++;
-    }
-  // Now process 'circuit' and 'rule'
+  let i = 3;
+  while (
+    i < nodes.length &&
+    nodes[i]?.type === "Atom" &&
+    typeof nodes[i]?.value === "string"
+  ) {
+    classObj.net_names.push(nodes[i]!.value as string);
+    i++;
+  }
   while (i < nodes.length) {
-    const node = nodes[i]
-    if (node.type === "List") {
-          if (node.type === "List" && node.children) {
-      const [keyNode, ...rest] = node.children;
+    const node = nodes[i];
+    if (node?.type === "List" && node.children) {
+      const [keyNode] = node.children;
       if (keyNode?.type === "Atom" && typeof keyNode.value === "string") {
         const key = keyNode.value;
         if (key === "circuit") {
@@ -791,11 +773,11 @@ function processClass(nodes: ASTNode[]): Class {
         }
       }
     }
-    i++
+    i++;
   }
+  return classObj as Class;
 }
-  return classObj as Class
-}
+                            
 
 
 function processCircuit(nodes: ASTNode[]): Circuit {
