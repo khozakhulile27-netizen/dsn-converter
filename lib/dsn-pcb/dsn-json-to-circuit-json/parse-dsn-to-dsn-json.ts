@@ -573,20 +573,19 @@ function processPin(nodes: ASTNode[]): Pin | null {
           padstack.shapes.push(processShape(node.children)); // <-- FIX: direct push
         } else if (keyNode.value === "attach" && rest[0]?.type === "Atom" && typeof rest[0].value === "string") {
           padstack.attach = rest[0].value as Padstack["attach"];
-        } else if (keyNode.value === "hole") {
-          if (typeof rest[0]?.value === "number") {
-            padstack.hole = { shape: "circle", diameter: rest[0]?.type === "Atom" && typeof rest[0].value === "number"? rest[0].value : 0
-          } else if (rest[0]?.value === "oval" && rest[1]?.type === "Atom" && rest[2]?.type === "Atom") {
-            padstack.hole = {
-  shape: "oval",
-  width: rest[1]?.type === "Atom" && typeof rest[1].value === "number"? rest[1].value : 0,
-  height: rest[2]?.type === "Atom" && typeof rest[2].value === "number"? rest[2].value : 0
-};
-     
-          }
+            } else if (keyNode.value === "hole") {
+      if (typeof rest[0]?.value === "number") {
+        padstack.hole = { shape: "circle", diameter: rest[0].value };
+      } else if (rest[0]?.value === "oval" && rest[1]?.type === "Atom" && rest[2]?.type === "Atom") {
+        padstack.hole = {
+          shape: "oval",
+          width: rest[1]?.type === "Atom" && typeof rest[1].value === "number"? rest[1].value : 0,
+          height: rest[2]?.type === "Atom" && typeof rest[2].value === "number"? rest[2].value : 0,
+               }
+   }
+ }
         }
       }
-    }
   });
   return padstack as Padstack;
   }
@@ -643,22 +642,24 @@ function processPolygonShape(nodes: ASTNode[]): Shape {
 function processCircleShape(nodes: ASTNode[]): CircleShape {
   const circle: Partial<CircleShape> = { shapeType: "circle" };
   // Safely handle both direct circle nodes and nested shape nodes
-  const shapeNodes = (nodes[0]?.value === "shape" && nodes[1]?.children) ? nodes[1].children : nodes;
+  const shapeNodes = (nodes[0]?.value === "shape" && nodes[1]?.children? nodes[1].children : nodes) as ASTNode[];
   if (shapeNodes[1]?.type === "Atom" && typeof shapeNodes[1].value === "string" &&
       shapeNodes[2]?.type === "Atom" && typeof shapeNodes[2].value === "number") {
     circle.layer = shapeNodes[1].value;
     circle.diameter = shapeNodes[2].value;
     return circle as CircleShape;
-  } else {
+    } else {
     // Try to extract coordinates if they exist
-    const coords = shapeNodes.slice(2).filter((n) => n.type === "Atom" && typeof n.value === "number");
+    const coords = shapeNodes
+     .slice(2)
+     .filter((n) => n.type === "Atom" && typeof n.value === "number");
     if (coords.length >= 3 && shapeNodes[1]?.type === "Atom") {
       circle.layer = String(shapeNodes[1].value);
       circle.diameter = Number(coords[1].value);
-      return circle as CircleShape; 
+      return circle as CircleShape;
+    }
     throw new Error("Invalid circle shape format");
-  }
-  }
+}
 return circle as CircleShape; 
 }
 
